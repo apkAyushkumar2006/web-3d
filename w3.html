@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pratibha Kala | Where Imagination Becomes Art</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ivory: '#FFFFF0',
+                        warmWhite: '#FDFBF7',
+                        terracotta: '#E2725B',
+                        saffron: '#FF9933',
+                        softPink: '#FFD1DC',
+                        gold: '#D4AF37',
+                        deepBrown: '#3E2723'
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Outfit"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Base & Theme Transitions */
+        body {
+            background-color: var(--bg-color, #FDFBF7);
+            color: var(--text-color, #3E2723);
+            transition: background-color 0.8s ease, color 0.8s ease;
+            overflow-x: hidden;
+            cursor: none; /* Custom cursor */
+        }
+        
+        /* Custom Cursor */
+        .cursor-dot, .cursor-outline {
+            position: fixed;
+            top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: #E2725B; }
+        .cursor-outline { width: 40px; height: 40px; border: 1px solid #E2725B; transition: width 0.2s, height 0.2s; }
+        
+        @media (max-width: 768px) {
+            .cursor-dot, .cursor-outline { display: none; }
+            body { cursor: auto; }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(253, 251, 247, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed; inset: 0; z-index: 10000;
+            background: #FDFBF7; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .brush-stroke {
+            stroke-dasharray: 1000; stroke-dashoffset: 1000;
+            animation: draw 1.5s ease-in-out forwards;
+        }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+
+        /* Masonry Gallery */
+        .masonry-grid {
+            column-count: 1; column-gap: 1.5rem;
+        }
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+        .masonry-item { break-inside: avoid; margin-bottom: 1.5rem; }
+
+        /* Hiding Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #FDFBF7; }
+        ::-webkit-scrollbar-thumb { background: #E2725B; border-radius: 4px; }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <div id="loader">
+        <svg width="120" height="120" viewBox="0 0 100 100" fill="none" stroke="#E2725B" stroke-width="3">
+            <path class="brush-stroke" d="M30,70 C30,70 20,40 40,30 C60,20 70,50 50,70 C40,80 30,70 30,70 Z M35,35 L45,80" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <div id="welcome-popup" class="fixed inset-0 z-[60] bg-deepBrown/40 backdrop-blur-sm hidden justify-center items-center opacity-0">
+        <div class="bg-warmWhite p-10 rounded-3xl max-w-md mx-4 text-center relative shadow-2xl glass transform scale-95">
+            <button onclick="closePopup()" class="absolute top-4 right-4 text-deepBrown hover:text-terracotta transition"><i data-lucide="x"></i></button>
+            <i data-lucide="sparkles" class="w-10 h-10 mx-auto text-gold mb-4"></i>
+            <h3 class="font-serif text-3xl mb-3 text-deepBrown">Welcome to Pratibha Kala</h3>
+            <p class="text-deepBrown/70 mb-8 font-light">Step into a world where colors, imagination, and emotions become art.</p>
+            <button onclick="closePopup()" class="bg-terracotta hover:bg-saffron text-white px-8 py-3 rounded-full transition w-full shadow-lg">Explore the Collection</button>
+        </div>
+    </div>
+
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 py-4 px-6 md:px-12 glass">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <a href="#" class="flex items-center gap-3 group">
+                <svg width="32" height="32" viewBox="0 0 100 100" fill="none" stroke="#E2725B" stroke-width="6" class="group-hover:scale-110 transition">
+                    <path d="M30,80 L30,20 C30,20 60,20 60,40 C60,60 30,60 30,60" stroke-linecap="round"/>
+                    <path d="M20,60 C40,80 70,80 80,40" stroke="#FF9933" stroke-linecap="round" opacity="0.6"/>
+                </svg>
+                <span class="font-serif text-2xl font-semibold tracking-wide text-deepBrown uppercase">Pratibha Kala</span>
+            </a>
+            
+            <div class="hidden md:flex items-center gap-8 font-medium text-sm text-deepBrown/80 tracking-wide">
+                <a href="#about" class="hover:text-terracotta transition">About</a>
+                <a href="#gallery" class="hover:text-terracotta transition">Artwork</a>
+                <a href="#custom" class="hover:text-terracotta transition">Custom Orders</a>
+                <button onclick="requestCustomArt()" class="border border-terracotta text-terracotta hover:bg-terracotta hover:text-white px-6 py-2 rounded-full transition">
+                    Contact Us
+                </button>
+            </div>
+            
+            <button class="md:hidden text-deepBrown" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
+        </div>
+    </nav>
+
+    <section class="relative h-screen flex items-center justify-center overflow-hidden">
+        <canvas id="hero-canvas" class="absolute inset-0 z-0 pointer-events-none opacity-80"></canvas>
+        
+        <div class="relative z-10 text-center px-4 mt-20" id="hero-content">
+            <span class="text-saffron font-medium tracking-[0.2em] uppercase text-sm mb-4 block">Where Imagination Becomes Art</span>
+            <h1 class="font-serif text-6xl md:text-8xl text-deepBrown mb-8 leading-tight">
+                Emotions <br> Crafted in <span class="text-terracotta italic">Color</span>
+            </h1>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="#gallery" class="bg-deepBrown hover:bg-terracotta text-white px-10 py-4 rounded-full font-medium transition shadow-xl w-full sm:w-auto">
+                    Explore Artwork
+                </a>
+                <button onclick="requestCustomArt()" class="glass border-deepBrown/20 text-deepBrown hover:border-terracotta hover:text-terracotta px-10 py-4 rounded-full font-medium transition w-full sm:w-auto">
+                    Order Custom Art
+                </button>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce text-deepBrown/50">
+            <span class="text-xs tracking-widest uppercase mb-2">Scroll</span>
+            <i data-lucide="arrow-down" class="w-4 h-4"></i>
+        </div>
+    </section>
+
+    <section class="py-12 bg-ivory border-y border-deepBrown/5">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h3 class="font-serif text-2xl text-deepBrown mb-6">Choose Your Mood</h3>
+            <div class="flex flex-wrap justify-center gap-3" id="mood-buttons">
+                <button onclick="setMood('warmWhite', '#3E2723')" class="px-6 py-2 rounded-full border border-deepBrown/20 hover:bg-warmWhite transition">🎨 Default</button>
+                <button onclick="setMood('#FFF5EE', '#8B4513')" class="px-6 py-2 rounded-full border border-deepBrown/20 hover:bg-orange-50 transition">🌿 Natural</button>
+                <button onclick="setMood('#FFF0F5', '#800080')" class="px-6 py-2 rounded-full border border-deepBrown/20 hover:bg-pink-50 transition">🌸 Dreamy</button>
+                <button onclick="setMood('#1A1A1A', '#FDFBF7')" class="px-6 py-2 rounded-full border border-deepBrown/20 hover:bg-gray-800 hover:text-white transition">🔥 Bold</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-24 px-6 relative">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
+            <div class="w-full md:w-1/2 relative g-reveal">
+                <div class="absolute -inset-4 bg-terracotta/10 rounded-3xl transform rotate-3"></div>
+                <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80" alt="Artist Studio" class="relative rounded-3xl shadow-2xl object-cover h-[500px] w-full">
+            </div>
+            <div class="w-full md:w-1/2 g-reveal">
+                <h2 class="font-serif text-4xl md:text-5xl text-deepBrown mb-6">The Story Behind <br><span class="text-terracotta">Pratibha Kala</span></h2>
+                <p class="text-deepBrown/70 text-lg leading-relaxed mb-6 font-light">
+                    Rooted in the rich heritage of Indian artistry, Pratibha Kala is more than a studio—it is a space where raw emotion meets the canvas. Every stroke, sketch, and sculpt is handcrafted with an obsession for detail.
+                </p>
+                <p class="text-deepBrown/70 text-lg leading-relaxed mb-8 font-light">
+                    We believe art should not just decorate a room; it should speak to the soul. From traditional motifs to modern abstract visions, we turn your imagination into timeless masterpieces.
+                </p>
+                <img src="https://images.unsplash.com/photo-1599339396328-941e73ea2671?auto=format&fit=crop&w=200&q=80" alt="Signature" class="w-32 opacity-80 mix-blend-multiply">
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="py-24 bg-ivory">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16 g-reveal">
+                <h2 class="font-serif text-4xl md:text-5xl text-deepBrown mb-4">Step Into the World of Art</h2>
+                <p class="text-deepBrown/60">Hover over the artwork to experience the 3D gallery.</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 mb-12 g-reveal">
+                <button class="text-sm uppercase tracking-wider font-medium text-terracotta border-b-2 border-terracotta pb-1">All Art</button>
+                <button class="text-sm uppercase tracking-wider font-medium text-deepBrown/50 hover:text-terracotta transition pb-1">Traditional</button>
+                <button class="text-sm uppercase tracking-wider font-medium text-deepBrown/50 hover:text-terracotta transition pb-1">Modern</button>
+            </div>
+
+            <div class="masonry-grid">
+                
+                <div class="masonry-item relative group g-reveal" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                    <div class="overflow-hidden rounded-2xl shadow-lg bg-white relative">
+                        <img src="https://images.unsplash.com/photo-1582561424760-0881f1816dc1?auto=format&fit=crop&w=600&q=80" alt="Abstract Canvas" class="w-full h-auto object-cover transform group-hover:scale-110 transition duration-700">
+                        <div class="absolute inset-0 bg-deepBrown/60 opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-center items-center p-6 text-center backdrop-blur-sm">
+                            <h3 class="text-white font-serif text-2xl mb-1">Golden Serenity</h3>
+                            <p class="text-white/70 text-sm mb-4">Abstract Acrylic</p>
+                            <button onclick="orderArt('Golden Serenity (Abstract Acrylic)')" class="bg-saffron text-white px-6 py-2 rounded-full font-medium hover:bg-gold transition flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-4 h-4"></i> Order via WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item relative group g-reveal" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                    <div class="overflow-hidden rounded-2xl shadow-lg bg-white relative">
+                        <img src="https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&w=600&q=80" alt="Traditional Indian Art" class="w-full h-auto object-cover transform group-hover:scale-110 transition duration-700">
+                        <div class="absolute inset-0 bg-deepBrown/60 opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-center items-center p-6 text-center backdrop-blur-sm">
+                            <h3 class="text-white font-serif text-2xl mb-1">Heritage Lore</h3>
+                            <p class="text-white/70 text-sm mb-4">Traditional Canvas</p>
+                            <button onclick="orderArt('Heritage Lore (Traditional)')" class="bg-saffron text-white px-6 py-2 rounded-full font-medium hover:bg-gold transition flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-4 h-4"></i> Order via WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="masonry-item relative group g-reveal" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                    <div class="overflow-hidden rounded-2xl shadow-lg bg-white relative">
+                        <img src="https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?auto=format&fit=crop&w=600&q=80" alt="Modern Sketch" class="w-full h-auto object-cover transform group-hover:scale-110 transition duration-700">
+                        <div class="absolute inset-0 bg-deepBrown/60 opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-center items-center p-6 text-center backdrop-blur-sm">
+                            <h3 class="text-white font-serif text-2xl mb-1">Urban Bloom</h3>
+                            <p class="text-white/70 text-sm mb-4">Charcoal & Pastel</p>
+                            <button onclick="orderArt('Urban Bloom (Charcoal)')" class="bg-saffron text-white px-6 py-2 rounded-full font-medium hover:bg-gold transition flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-4 h-4"></i> Order via WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="masonry-item relative group g-reveal" data-tilt data-tilt-max="5" data-tilt-speed="400">
+                    <div class="overflow-hidden rounded-2xl shadow-lg bg-white relative">
+                        <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&q=80" alt="Portrait" class="w-full h-auto object-cover transform group-hover:scale-110 transition duration-700">
+                        <div class="absolute inset-0 bg-deepBrown/60 opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col justify-center items-center p-6 text-center backdrop-blur-sm">
+                            <h3 class="text-white font-serif text-2xl mb-1">Crimson Gaze</h3>
+                            <p class="text-white/70 text-sm mb-4">Oil Painting</p>
+                            <button onclick="orderArt('Crimson Gaze (Oil Portrait)')" class="bg-saffron text-white px-6 py-2 rounded-full font-medium hover:bg-gold transition flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-4 h-4"></i> Order via WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="custom" class="py-24 relative overflow-hidden bg-deepBrown text-warmWhite">
+        <div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-fixed bg-center"></div>
+        <div class="max-w-4xl mx-auto px-6 relative z-10 text-center g-reveal">
+            <i data-lucide="palette" class="w-16 h-16 text-saffron mx-auto mb-6"></i>
+            <h2 class="font-serif text-4xl md:text-6xl mb-6">Have an Idea? <br>Let’s Turn It Into Art.</h2>
+            <p class="text-warmWhite/80 text-lg md:text-xl font-light mb-10 max-w-2xl mx-auto">
+                Whether you want a personalized portrait, a custom landscape for your living room, or a traditional piece for a gift, we bring your vision to life.
+            </p>
+            <button onclick="requestCustomArt()" class="bg-saffron hover:bg-terracotta text-white px-10 py-4 rounded-full font-semibold text-lg transition shadow-xl shadow-saffron/20 flex items-center gap-3 mx-auto">
+                <i data-lucide="paintbrush-2"></i> Start Your Custom Artwork
+            </button>
+        </div>
+    </section>
+
+    <section class="py-24 bg-warmWhite border-b border-deepBrown/5 text-center">
+        <div class="max-w-3xl mx-auto px-6 relative h-40 flex items-center justify-center">
+            <i data-lucide="quote" class="absolute top-0 text-terracotta/20 w-24 h-24 -z-10"></i>
+            <h3 id="quote-text" class="font-serif text-2xl md:text-3xl text-deepBrown italic transition-opacity duration-1000 opacity-100">
+                "Every blank canvas is an invitation to imagine."
+            </h3>
+        </div>
+    </section>
+
+    <footer class="bg-deepBrown text-warmWhite/80 py-16 text-center border-t border-saffron">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col items-center">
+            <svg width="40" height="40" viewBox="0 0 100 100" fill="none" stroke="#FF9933" stroke-width="4" class="mb-4">
+                <path d="M30,80 L30,20 C30,20 60,20 60,40 C60,60 30,60 30,60" stroke-linecap="round"/>
+                <path d="M20,60 C40,80 70,80 80,40" stroke="#E2725B" stroke-linecap="round"/>
+            </svg>
+            <h2 class="font-serif text-3xl text-white mb-2 tracking-wider">PRATIBHA KALA</h2>
+            <p class="text-terracotta font-medium tracking-widest text-sm uppercase mb-10">Where imagination becomes art.</p>
+            
+            <div class="flex gap-8 mb-10 text-sm font-medium">
+                <a href="#" class="hover:text-white transition">Home</a>
+                <a href="#about" class="hover:text-white transition">About</a>
+                <a href="#gallery" class="hover:text-white transition">Artwork</a>
+                <a href="#custom" class="hover:text-white transition">Custom Orders</a>
+            </div>
+
+            <div class="flex gap-6 mb-12">
+                <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-terracotta hover:text-white transition"><i data-lucide="instagram" class="w-5 h-5"></i></a>
+                <a href="javascript:requestCustomArt()" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25D366] hover:text-white transition"><i data-lucide="message-circle" class="w-5 h-5"></i></a>
+                <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-terracotta hover:text-white transition"><i data-lucide="mail" class="w-5 h-5"></i></a>
+            </div>
+
+            <p class="text-xs text-white/40">© 2026 Pratibha Kala. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ----------------------------------------------------
+        // IMPORTANT: CENTRAL CONFIGURATION
+        // Replace this with your actual WhatsApp Number
+        // Format: Country Code + Number (e.g., "919876543210")
+        // ----------------------------------------------------
+        const WHATSAPP_NUMBER = "910000000000";
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Loading Screen Logic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                gsap.to('#loader', { opacity: 0, duration: 0.8, onComplete: () => {
+                    document.getElementById('loader').style.display = 'none';
+                    // Trigger welcome popup if first visit
+                    if (!sessionStorage.getItem('visited')) {
+                        setTimeout(showPopup, 1000);
+                        sessionStorage.setItem('visited', 'true');
+                    }
+                }});
+                
+                // Animate hero text in
+                gsap.from('#hero-content h1', { y: 50, opacity: 0, duration: 1.2, ease: "power3.out" });
+                gsap.from('#hero-content a, #hero-content button', { y: 20, opacity: 0, duration: 1, stagger: 0.2, delay: 0.5 });
+            }, 1800);
+        });
+
+        // WhatsApp Ordering Functions
+        function orderArt(artName) {
+            const message = `Hello Pratibha Kala! I am interested in ordering the artwork: "${artName}". Please share the details, price, and availability.`;
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        function requestCustomArt() {
+            const message = `Hello Pratibha Kala! I would like to discuss a custom artwork. Please guide me regarding the design, size, and price.`;
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        // Popup Logic
+        function showPopup() {
+            const popup = document.getElementById('welcome-popup');
+            popup.classList.remove('hidden');
+            popup.classList.add('flex');
+            gsap.to(popup, { opacity: 1, duration: 0.5 });
+            gsap.to(popup.querySelector('div'), { scale: 1, duration: 0.5, ease: "back.out(1.7)" });
+        }
+        function closePopup() {
+            const popup = document.getElementById('welcome-popup');
+            gsap.to(popup, { opacity: 0, duration: 0.3, onComplete: () => {
+                popup.classList.add('hidden');
+                popup.classList.remove('flex');
+            }});
+        }
+
+        // Custom Cursor Logic
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        window.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            // Slight delay for outline
+            setTimeout(() => {
+                cursorOutline.style.left = e.clientX + 'px';
+                cursorOutline.style.top = e.clientY + 'px';
+            }, 50);
+        });
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => cursorOutline.style.transform = 'translate(-50%, -50%) scale(1.5)');
+            el.addEventListener('mouseleave', () => cursorOutline.style.transform = 'translate(-50%, -50%) scale(1)');
+        });
+
+        // Mood Selector
+        function setMood(bgColor, textColor) {
+            document.documentElement.style.setProperty('--bg-color', bgColor);
+            document.documentElement.style.setProperty('--text-color', textColor);
+            // Show toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 bg-terracotta text-white px-6 py-3 rounded-xl shadow-lg z-50 opacity-0 transform translate-y-4 transition-all';
+            toast.innerText = 'Mood updated ✨';
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-4'); }, 100);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 500); }, 3000);
+        }
+
+        // Quotes Carousel
+        const quotes = [
+            "Every blank canvas is an invitation to imagine.",
+            "Art turns ordinary moments into something unforgettable.",
+            "Create with emotion. Paint with purpose."
+        ];
+        let quoteIndex = 0;
+        setInterval(() => {
+            const quoteEl = document.getElementById('quote-text');
+            quoteEl.style.opacity = 0;
+            setTimeout(() => {
+                quoteIndex = (quoteIndex + 1) % quotes.length;
+                quoteEl.innerText = `"${quotes[quoteIndex]}"`;
+                quoteEl.style.opacity = 1;
+            }, 1000);
+        }, 5000);
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-md');
+                nav.style.background = 'rgba(253, 251, 247, 0.9)';
+            } else {
+                nav.classList.remove('shadow-md');
+                nav.style.background = 'rgba(253, 251, 247, 0.7)';
+            }
+        });
+
+        // GSAP Scroll Animations
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.utils.toArray('.g-reveal').forEach(element => {
+            gsap.from(element, {
+                scrollTrigger: { trigger: element, start: "top 85%" },
+                y: 50, opacity: 0, duration: 1, ease: "power3.out"
+            });
+        });
+
+        // Three.js Hero Canvas Background (Abstract Artistic Shape)
+        const canvas = document.getElementById('hero-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Create abstract shape (Torus Knot resembling sculpted clay/paint)
+        const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+        const material = new THREE.MeshStandardMaterial({ 
+            color: 0xE2725B, 
+            roughness: 0.4, 
+            metalness: 0.1,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const shape = new THREE.Mesh(geometry, material);
+        scene.add(shape);
+
+        // Add Particles (Paint drops/dust)
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 200;
+        const posArray = new Float32Array(particlesCount * 3);
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 60;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({ size: 0.1, color: 0xFF9933 });
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Lighting
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(20, 20, 20);
+        scene.add(pointLight);
+
+        camera.position.z = 30;
+
+        // Mouse Interaction for 3D
+        let mouseX = 0; let mouseY = 0;
+        window.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = -(event.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            shape.rotation.x += 0.002;
+            shape.rotation.y += 0.003;
+            
+            // Mouse Parallax
+            shape.position.x += (mouseX * 5 - shape.position.x) * 0.05;
+            shape.position.y += (mouseY * 5 - shape.position.y) * 0.05;
+
+            particlesMesh.rotation.y -= 0.001;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
